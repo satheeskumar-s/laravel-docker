@@ -1,0 +1,66 @@
+#https://github.com/aschmelyun/docker-compose-laravel
+
+version: "3.4"
+
+networks:
+  laravel8:
+    driver: bridge
+
+services:
+  web:
+    build:
+      context: ./docker
+      dockerfile: web.dockerfile
+    container_name: laravel-8-nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./:/var/www/html/laravel8
+    depends_on:
+      - php
+      - cache
+    networks:
+      - laravel8
+
+  php:
+    build:
+      context: ./docker
+      dockerfile: php.dockerfile
+    container_name: laravel-8-php
+    volumes:
+      - ./:var/www/html/laravel8
+    networks:
+      - laravel8
+
+  composer:
+    build:
+      context: ./docker
+      dockerfile: composer.dockerfile
+    container_name: laravel-8-composer
+    volumes:
+      - ./:var/www/html/laravel8
+    working_dir: /var/www/html/laravel8
+    depends_on:
+      - php
+    user: laravel
+    entrypoint: [ 'composer', '--ignore-platform-reqs' ]
+    networks:
+      - laravel8
+
+  #  npm-node:
+  #    image: node:alpine
+  #    container_name: laravel-8-npm-node
+  #    volumes:
+  #      - ./:var/www/html/laravel8
+  #    working_dir: /var/www/html/laravel8
+  #    entrypoint: [ 'npm' ]
+  #    networks:
+  #      - laravel8
+
+  cache:
+    image: redis:alpine
+    container_name: laravel-8-redis
+    ports:
+      - 6379:6379
+    networks:
+      - laravel8
